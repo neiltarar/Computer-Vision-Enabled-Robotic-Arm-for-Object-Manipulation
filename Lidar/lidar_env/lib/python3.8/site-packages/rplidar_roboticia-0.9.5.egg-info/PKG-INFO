@@ -1,0 +1,21 @@
+Metadata-Version: 1.1
+Name: rplidar-roboticia
+Version: 0.9.5
+Summary: Simple and lightweight module for working with RPLidar laser scanners
+Home-page: https://github.com/Roboticia/RPLidar
+Author: Artyom Pavlov, Julien Jehl
+Author-email: julien.@roboticia.com
+License: MIT
+Description: This module aims to implement communication protocol with RPLidar laser scanners. It's Python 2 and 3 compatible but was mainly tested using Python 3.
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Education
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: Microsoft
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: Unix
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: System :: Hardware
