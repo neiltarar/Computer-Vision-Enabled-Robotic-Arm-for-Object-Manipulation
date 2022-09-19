@@ -35,3 +35,5 @@ node_modules
 *.exe
 *.out
 *.app
+
+/ros_workspace/log/
