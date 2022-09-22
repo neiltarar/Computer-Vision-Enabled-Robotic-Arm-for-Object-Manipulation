@@ -1,0 +1,13 @@
+//
+// Created by neil on 22/09/22.
+//
+
+#ifndef ROS2_ROBOT_ARM_WITH_LIDAR_CONDITIONALS_H
+#define ROS2_ROBOT_ARM_WITH_LIDAR_CONDITIONALS_H
+
+class conditionals {
+
+};
+
+
+#endif //ROS2_ROBOT_ARM_WITH_LIDAR_CONDITIONALS_H
