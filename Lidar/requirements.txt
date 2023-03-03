@@ -1,3 +1,0 @@
-numpy==1.23.3
-pyserial==3.5
-rplidar-roboticia==0.9.5

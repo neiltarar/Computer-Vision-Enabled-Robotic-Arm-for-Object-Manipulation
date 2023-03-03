@@ -79,3 +79,6 @@ Thumbs.db
 *.wmv
 
 /ros_workspace/log
+
+# Python Virtual Environment
+venv/
