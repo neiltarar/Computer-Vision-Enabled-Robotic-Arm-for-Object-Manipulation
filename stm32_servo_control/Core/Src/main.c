@@ -95,9 +95,23 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+//	  HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_SET)
 	  HAL_GPIO_TogglePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin);
-	  HAL_Delay(5000);
-    /* USER CODE END WHILE */
+
+//	  htim2.Instance->CCR1 = 25;  // duty cycle is .5 ms // where 0 degree turn
+//	  HAL_Delay(1000);
+	  htim2.Instance->CCR1 = 35;  // duty cycle is .5 ms
+	  HAL_Delay(500);
+	  htim2.Instance->CCR1 = 75;  // duty cycle is 1.5 ms
+	  HAL_Delay(500);
+	  htim2.Instance->CCR1 = 125;  // duty cycle is 2.5 ms
+	  HAL_Delay(500);
+	  htim2.Instance->CCR1 = 175;  // duty cycle is 3.5 ms
+	  HAL_Delay(500);
+	  htim2.Instance->CCR1 = 225;
+	  HAL_Delay(500);
+	  htim2.Instance->CCR1 = 275; // duty cycle is 4.5 ms
+	 /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
@@ -126,7 +140,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 64;
+  RCC_OscInitStruct.PLL.PLLN = 168;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 7;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
@@ -140,10 +154,10 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV16;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
   {
     Error_Handler();
   }
@@ -169,9 +183,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 127;
+  htim2.Init.Prescaler = 900;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 62499;
+  htim2.Init.Period = 1000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
