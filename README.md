@@ -13,3 +13,5 @@ Solving for ARR: ARR = 1000
 
 
 <img src="./prescalor.png" alt="MarineGEO circle logo" style="height: 300px; width:500px;"/>
+
+work in progress. 
