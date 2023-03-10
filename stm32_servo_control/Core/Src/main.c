@@ -21,6 +21,14 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
+#include <string.h>
+#include "stm32f4xx_hal.h"
+
+#define MAX_UART_BUFFER_SIZE 100
+#define BUFFER_SIZE 100
+
+
 
 /* USER CODE END Includes */
 
@@ -41,6 +49,8 @@
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
 
+UART_HandleTypeDef huart4;
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -49,13 +59,18 @@ TIM_HandleTypeDef htim2;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_UART4_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+int _write(int file, char *ptr, int len) {
+	HAL_UART_Transmit(&huart4, (uint8_t*)ptr, len, HAL_MAX_DELAY);
 
+	return len;
+}
 /* USER CODE END 0 */
 
 /**
@@ -65,37 +80,43 @@ static void MX_TIM2_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	 char rx_buffer[MAX_UART_BUFFER_SIZE];
+	 char tx_buffer[MAX_UART_BUFFER_SIZE];
+	 char stm_greeting[] = "From STM32";
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+	HAL_Init();
 
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
 
   /* Configure the system clock */
-  SystemClock_Config();
+	SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_TIM2_Init();
-  /* USER CODE BEGIN 2 */
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+	MX_GPIO_Init();
+	MX_TIM2_Init();
+	MX_UART4_Init();
+	/* USER CODE BEGIN 2 */
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
+
+	while (1)
   {
+
 	  // BASE 1
 //	  htim2.Instance->CCR1 = 35; // duty cycle is .5 ms
 //	  HAL_Delay(1500);
@@ -103,17 +124,21 @@ int main(void)
 //	  HAL_Delay(1500);
 //	  htim2.Instance->CCR1 = 255;// duty cycle is 2.5 ms
 //	  HAL_Delay(1500);
-
-	  // BASE 2
-	  htim2.Instance->CCR2 = 35; // duty cycle is .5 ms
-	  HAL_Delay(1500);
-	  htim2.Instance->CCR2 = 115;// duty cycle is 1.5 ms
-	  HAL_Delay(1500);
-	  htim2.Instance->CCR2 = 255;// duty cycle is 2.5 ms
-	  HAL_Delay(1500);
+//
+//	  // ARM 3
+//	  htim2.Instance->CCR2 = 35; // duty cycle is .5 ms
+//	  HAL_Delay(1500);
+//	  htim2.Instance->CCR2 = 130;// duty cycle is 1.5 ms
+//	  HAL_Delay(1500);
+////	  htim2.Instance->CCR2 = 255;// duty cycle is 2.5 ms
+//	  HAL_Delay(1500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	HAL_UART_Transmit(&huart4, (uint8_t*)stm_greeting, strlen(stm_greeting), 1000);
+	HAL_UART_Receive(&huart4, (uint8_t*)rx_buffer, sizeof(rx_buffer), HAL_MAX_DELAY);
+	sprintf(tx_buffer, "Received On STM32: %s\r\n", rx_buffer);
+	HAL_UART_Transmit(&huart4, (uint8_t*)tx_buffer, strlen(tx_buffer), HAL_MAX_DELAY);
   }
   /* USER CODE END 3 */
 }
@@ -224,6 +249,39 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 2 */
   HAL_TIM_MspPostInit(&htim2);
+
+}
+
+/**
+  * @brief UART4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_UART4_Init(void)
+{
+
+  /* USER CODE BEGIN UART4_Init 0 */
+
+  /* USER CODE END UART4_Init 0 */
+
+  /* USER CODE BEGIN UART4_Init 1 */
+
+  /* USER CODE END UART4_Init 1 */
+  huart4.Instance = UART4;
+  huart4.Init.BaudRate = 9600;
+  huart4.Init.WordLength = UART_WORDLENGTH_8B;
+  huart4.Init.StopBits = UART_STOPBITS_1;
+  huart4.Init.Parity = UART_PARITY_NONE;
+  huart4.Init.Mode = UART_MODE_TX_RX;
+  huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart4.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN UART4_Init 2 */
+
+  /* USER CODE END UART4_Init 2 */
 
 }
 
