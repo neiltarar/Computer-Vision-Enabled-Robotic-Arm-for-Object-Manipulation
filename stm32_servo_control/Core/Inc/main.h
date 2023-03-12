@@ -61,8 +61,8 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define BASE_1_CH1_Pin GPIO_PIN_15
 #define BASE_1_CH1_GPIO_Port GPIOA
-#define BASE_2_CH2_Pin GPIO_PIN_3
-#define BASE_2_CH2_GPIO_Port GPIOB
+#define ARM_3_CH2_Pin GPIO_PIN_3
+#define ARM_3_CH2_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

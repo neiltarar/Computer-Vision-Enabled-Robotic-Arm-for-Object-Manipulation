@@ -1,6 +1,9 @@
-../Core/Src/main.c:72:5:main	88	static
-../Core/Src/main.c:159:6:SystemClock_Config	88	static
-../Core/Src/main.c:206:13:MX_TIM2_Init	64	static
-../Core/Src/main.c:269:13:MX_UART4_Init	8	static
-../Core/Src/main.c:302:13:MX_GPIO_Init	24	static
-../Core/Src/main.c:320:6:Error_Handler	4	static,ignoring_inline_asm
+../Core/Src/main.c:62:13:moveRobotArmJoint	16	static
+../Core/Src/main.c:78:13:send_echo	280	static
+../Core/Src/main.c:86:13:resetRxBuffer	16	static
+../Core/Src/main.c:103:5:main	88	static
+../Core/Src/main.c:179:6:SystemClock_Config	88	static
+../Core/Src/main.c:226:13:MX_TIM2_Init	64	static
+../Core/Src/main.c:289:13:MX_UART4_Init	8	static
+../Core/Src/main.c:322:13:MX_GPIO_Init	24	static
+../Core/Src/main.c:340:6:Error_Handler	4	static,ignoring_inline_asm

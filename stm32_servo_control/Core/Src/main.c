@@ -46,7 +46,10 @@
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
 UART_HandleTypeDef huart4;
-
+typedef enum {
+  BASE1,
+  ARM3
+} CCR_Register;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -56,6 +59,34 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_UART4_Init(void);
+static void moveRobotArmJoint(uint32_t value, CCR_Register ccr_register) {
+	  switch (ccr_register) {
+	    case BASE1:
+	      htim2.Instance->CCR1 = value;
+	      HAL_Delay(600);
+	      break;
+	    case ARM3:
+	      htim2.Instance->CCR2 = value;
+	      HAL_Delay(600);
+	      break;
+	    default:
+	      // handle error case
+	      break;
+	  }
+}
+
+static void send_echo(const char* message) {
+    char tx_buffer[256];
+    sprintf(tx_buffer, "Echo from STM32: %s\n", message);
+    int length = strcspn(tx_buffer, "\n");
+    HAL_Delay(500);
+    HAL_UART_Transmit(&huart4, (uint8_t*)tx_buffer, length, HAL_MAX_DELAY);
+}
+
+static void resetRxBuffer(char rx_buffer, int rx_index) {
+    memset(rx_buffer, 0, sizeof(rx_buffer));
+    rx_index = 0;
+}
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -83,26 +114,28 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-	HAL_Init();
-	printf("Initilizing the main function.\n");
+  HAL_Init();
+
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
 
   /* Configure the system clock */
-//	SystemClock_Config();
+  SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-	MX_GPIO_Init();
-//	MX_TIM2_Init();
-	MX_UART4_Init();
-	/* USER CODE BEGIN 2 */
-//	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-//	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+  MX_GPIO_Init();
+  MX_TIM2_Init();
+  MX_UART4_Init();
+  /* USER CODE BEGIN 2 */
+    // BASE 1
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+  	// ARM 3
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 
   /* USER CODE END 2 */
 
@@ -111,22 +144,7 @@ int main(void)
 
 	while (1)
   {
-	  // BASE 1
-//	  htim2.Instance->CCR1 = 35; // duty cycle is .5 ms
-//	  HAL_Delay(1500);
-//	  htim2.Instance->CCR1 = 115;// duty cycle is 1.5 ms
-//	  HAL_Delay(1500);
-//	  htim2.Instance->CCR1 = 255;// duty cycle is 2.5 ms
-//	  HAL_Delay(1500);
-//
-//	  // ARM 3
-//	  htim2.Instance->CCR2 = 35; // duty cycle is .5 ms
-//	  HAL_Delay(1500);
-//	  htim2.Instance->CCR2 = 130;// duty cycle is 1.5 ms
-//	  HAL_Delay(1500);
-////	  htim2.Instance->CCR2 = 255;// duty cycle is 2.5 ms
-//	  HAL_Delay(1500);
-    /* USER CODE END WHILE */
+	/* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 	printf ("Waiting for Rx data...\n");
@@ -140,18 +158,20 @@ int main(void)
 		HAL_UART_Receive(&huart4, &rx_data, 1, HAL_MAX_DELAY);
 	}
 	rx_buffer[rx_index] = '\0';
-	printf ("Rx data: %u \n", rx_data);
-	printf("Rx buffer: %s\n", rx_buffer);
-	sprintf(tx_buffer, "Echo from STM32: %s\n", rx_buffer);
-	int length = strcspn(tx_buffer, "\n");
-	HAL_Delay(500);
-	HAL_UART_Transmit(&huart4, tx_buffer, length, HAL_MAX_DELAY);
-	memset(rx_buffer, 0, sizeof(rx_buffer));
-	rx_index = 0;
-  }
-/* USER CODE END 3 */
 
+	int value = atoi(rx_buffer); // Convert received string to integer
+
+	  if (value >= 0 && value <= 255) { // Check if the value is within valid range
+		  moveRobotArmJoint(value, 0); // Call the setCCR2Value() function with the received value
+		  moveRobotArmJoint(value, 1);
+	  }
+	  memset(rx_buffer, 0, sizeof(rx_buffer));
+	  rx_index = 0;
+//	  resetRxBuffer(rx_buffer, rx_index);
+  }
+  /* USER CODE END 3 */
 }
+
 /**
   * @brief System Clock Configuration
   * @retval None
