@@ -25,10 +25,7 @@
 #include <string.h>
 #include "stm32f4xx_hal.h"
 
-#define MAX_UART_BUFFER_SIZE 100
-#define BUFFER_SIZE 100
-
-
+#define RX_BUFFER_SIZE 32
 
 /* USER CODE END Includes */
 
@@ -48,7 +45,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
-
 UART_HandleTypeDef huart4;
 
 /* USER CODE BEGIN PV */
@@ -66,11 +62,7 @@ static void MX_UART4_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-int _write(int file, char *ptr, int len) {
-	HAL_UART_Transmit(&huart4, (uint8_t*)ptr, len, HAL_MAX_DELAY);
 
-	return len;
-}
 /* USER CODE END 0 */
 
 /**
@@ -80,22 +72,25 @@ int _write(int file, char *ptr, int len) {
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	 char rx_buffer[MAX_UART_BUFFER_SIZE];
-	 char tx_buffer[MAX_UART_BUFFER_SIZE];
-	 char stm_greeting[] = "From STM32";
+	char rx_buffer[RX_BUFFER_SIZE];
+	char tx_buffer[RX_BUFFER_SIZE];
+	uint8_t rx_data;
+	int rx_index = 0;
+
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
 	HAL_Init();
-
+	printf("Initilizing the main function.\n");
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
 
   /* Configure the system clock */
-	SystemClock_Config();
+//	SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
 
@@ -103,11 +98,11 @@ int main(void)
 
   /* Initialize all configured peripherals */
 	MX_GPIO_Init();
-	MX_TIM2_Init();
+//	MX_TIM2_Init();
 	MX_UART4_Init();
 	/* USER CODE BEGIN 2 */
-	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+//	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+//	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 
   /* USER CODE END 2 */
 
@@ -116,7 +111,6 @@ int main(void)
 
 	while (1)
   {
-
 	  // BASE 1
 //	  htim2.Instance->CCR1 = 35; // duty cycle is .5 ms
 //	  HAL_Delay(1500);
@@ -135,14 +129,29 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	HAL_UART_Transmit(&huart4, (uint8_t*)stm_greeting, strlen(stm_greeting), 1000);
-	HAL_UART_Receive(&huart4, (uint8_t*)rx_buffer, sizeof(rx_buffer), HAL_MAX_DELAY);
-	sprintf(tx_buffer, "Received On STM32: %s\r\n", rx_buffer);
-	HAL_UART_Transmit(&huart4, (uint8_t*)tx_buffer, strlen(tx_buffer), HAL_MAX_DELAY);
-  }
-  /* USER CODE END 3 */
-}
+	printf ("Waiting for Rx data...\n");
+	HAL_UART_Receive(&huart4, &rx_data, 1, HAL_MAX_DELAY);
+	while(rx_data != '\n' && rx_index < RX_BUFFER_SIZE - 1) {
+		// Add byte to the buffer
+		rx_buffer[rx_index] = rx_data;
+		rx_index++;
 
+		// Receive next byte
+		HAL_UART_Receive(&huart4, &rx_data, 1, HAL_MAX_DELAY);
+	}
+	rx_buffer[rx_index] = '\0';
+	printf ("Rx data: %u \n", rx_data);
+	printf("Rx buffer: %s\n", rx_buffer);
+	sprintf(tx_buffer, "Echo from STM32: %s\n", rx_buffer);
+	int length = strcspn(tx_buffer, "\n");
+	HAL_Delay(500);
+	HAL_UART_Transmit(&huart4, tx_buffer, length, HAL_MAX_DELAY);
+	memset(rx_buffer, 0, sizeof(rx_buffer));
+	rx_index = 0;
+  }
+/* USER CODE END 3 */
+
+}
 /**
   * @brief System Clock Configuration
   * @retval None
