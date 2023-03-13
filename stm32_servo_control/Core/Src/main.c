@@ -24,14 +24,12 @@
 #include <stdio.h>
 #include <string.h>
 #include "stm32f4xx_hal.h"
-
-#define RX_BUFFER_SIZE 32
-
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+#define RX_BUFFER_SIZE 4
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -107,7 +105,7 @@ int main(void)
 	char tx_buffer[RX_BUFFER_SIZE];
 	uint8_t rx_data;
 	int rx_index = 0;
-
+	bool start_detected = false;
 
   /* USER CODE END 1 */
 
@@ -122,7 +120,6 @@ int main(void)
 
   /* Configure the system clock */
   SystemClock_Config();
-
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
@@ -147,28 +144,44 @@ int main(void)
 	/* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	printf ("Waiting for Rx data...\n");
-	HAL_UART_Receive(&huart4, &rx_data, 1, HAL_MAX_DELAY);
-	while(rx_data != '\n' && rx_index < RX_BUFFER_SIZE - 1) {
+	 printf("Waiting for Rx data...\n");
+		start_detected = false;
+		while (!start_detected)
+		{
+			HAL_UART_Receive(&huart4, &rx_data, 1, HAL_MAX_DELAY);
+			if (rx_data == '#')
+			{
+				start_detected = true;
+				rx_index = 0;
+			}
+		}
+
+	while(rx_data != '\n' && rx_index < RX_BUFFER_SIZE - 1 && start_detected == true) {
+		// Receive next byte
+		HAL_UART_Receive(&huart4, &rx_data, 1, HAL_MAX_DELAY);
 		// Add byte to the buffer
 		rx_buffer[rx_index] = rx_data;
 		rx_index++;
-
-		// Receive next byte
-		HAL_UART_Receive(&huart4, &rx_data, 1, HAL_MAX_DELAY);
 	}
-	rx_buffer[rx_index] = '\0';
 
 	int value = atoi(rx_buffer); // Convert received string to integer
-
-	  if (value >= 0 && value <= 255) { // Check if the value is within valid range
+	memset(rx_buffer, 0, sizeof(rx_buffer));
+	rx_index = 0;
+	rx_buffer[rx_index] = '\0';
+	start_detected = false;
+	printf ("Value: %d\n", value);
+//	send_echo("received");
+	if (value >= 0 && value <= 255) { // Check if the value is within valid range
 		  moveRobotArmJoint(value, 0); // Call the setCCR2Value() function with the received value
 		  moveRobotArmJoint(value, 1);
 	  }
-	  memset(rx_buffer, 0, sizeof(rx_buffer));
-	  rx_index = 0;
+
+	char tx_data[] = "Received data: ";
+	HAL_UART_Transmit(&huart4, (uint8_t*)tx_data, strlen(tx_data), HAL_MAX_DELAY);
+
 //	  resetRxBuffer(rx_buffer, rx_index);
   }
+
   /* USER CODE END 3 */
 }
 
