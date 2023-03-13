@@ -29,7 +29,8 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-#define RX_BUFFER_SIZE 4
+#define RX_BUFFER_SIZE 10
+#define TX_BUFFER_SIZE 32
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -102,7 +103,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	char rx_buffer[RX_BUFFER_SIZE];
-	char tx_buffer[RX_BUFFER_SIZE];
+	char tx_data[TX_BUFFER_SIZE];
 	uint8_t rx_data;
 	int rx_index = 0;
 	bool start_detected = false;
@@ -164,21 +165,42 @@ int main(void)
 		rx_index++;
 	}
 
+	// Split the received data into two variables at '-'
+	char *value_str = strtok(rx_buffer, "-");
+	char my_string[5];
+	char JOINT[5];
+	strcpy(my_string, value_str);
+	for(int i=0; i<sizeof(my_string);i++){
+	    JOINT[i] = my_string[i];
+	}
+	JOINT[sizeof(my_string)] = '\0';
+
+	// Determine the CCR register based on joint name
+	CCR_Register ccr_register;
+	if (strcmp(JOINT, "BASE1") == 0) {
+	    ccr_register = BASE1;
+	} else if (strcmp(JOINT, "ARM3") == 0) {
+	    ccr_register = ARM3;
+	} else {
+	    // Handle error case
+	    continue; // Set to a default value
+	}
+
+	char *movement_angle_str = strtok(NULL, "-");
+	int movement_angle_int = atoi(movement_angle_str); // Convert the second received string to integer
 	int value = atoi(rx_buffer); // Convert received string to integer
+	sprintf(tx_data, "STM32: %d", value);
+	HAL_UART_Transmit(&huart4, (uint8_t*)tx_data, strlen(tx_data), HAL_MAX_DELAY);
 	memset(rx_buffer, 0, sizeof(rx_buffer));
 	rx_index = 0;
 	rx_buffer[rx_index] = '\0';
 	start_detected = false;
 	printf ("Value: %d\n", value);
 //	send_echo("received");
-	if (value >= 0 && value <= 255) { // Check if the value is within valid range
-		  moveRobotArmJoint(value, 0); // Call the setCCR2Value() function with the received value
-		  moveRobotArmJoint(value, 1);
+	if (movement_angle_int >= 0 && movement_angle_int <= 255) { // Check if the value is within valid range
+		  moveRobotArmJoint(movement_angle_int, ccr_register); // Call the setCCR2Value() function with the received value
 	  }
-
-	char tx_data[] = "Received data: ";
-	HAL_UART_Transmit(&huart4, (uint8_t*)tx_data, strlen(tx_data), HAL_MAX_DELAY);
-
+	ccr_register = 0;
 //	  resetRxBuffer(rx_buffer, rx_index);
   }
 
