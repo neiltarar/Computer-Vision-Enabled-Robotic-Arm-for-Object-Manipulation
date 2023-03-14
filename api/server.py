@@ -17,6 +17,7 @@ def handle_command():
     command = request.json.get("command")
     # Handle the command here
     print(f"Received command: {command}")
+    send_receive_serial_data(command)
     return {"status": "success"}
 
 if __name__ == "__main__":
