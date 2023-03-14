@@ -1,5 +1,6 @@
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, request
 # from waitress import serve
+from utils.serial_communication import send_receive_serial_data
 
 app = Flask(__name__, static_folder="../webclient/build")
 
@@ -11,5 +12,12 @@ def serve():
 def serve_static(path):
     return send_from_directory(app.static_folder, path)
 
+@app.route("/command", methods=["POST"])
+def handle_command():
+    command = request.json.get("command")
+    # Handle the command here
+    print(f"Received command: {command}")
+    return {"status": "success"}
+
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=3000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
