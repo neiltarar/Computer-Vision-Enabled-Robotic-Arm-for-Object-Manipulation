@@ -23,13 +23,14 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include <string.h>
-#include "stm32f4xx_hal.h"
 #include <stdbool.h>
+#include <stdlib.h>
+#include "stm32f4xx_hal.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-#define RX_BUFFER_SIZE 10
+#define RX_BUFFER_SIZE 32
 #define TX_BUFFER_SIZE 32
 /* USER CODE END PTD */
 
@@ -75,17 +76,10 @@ static void moveRobotArmJoint(uint32_t value, CCR_Register ccr_register) {
 }
 
 static void send_echo(const char* message) {
-    char tx_buffer[256];
-    sprintf(tx_buffer, "Echo from STM32: %s\n", message);
-    int length = strcspn(tx_buffer, "\n");
-    HAL_Delay(500);
-    HAL_UART_Transmit(&huart4, (uint8_t*)tx_buffer, length, HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart4, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
 }
 
-static void resetRxBuffer(char rx_buffer, int rx_index) {
-    memset(rx_buffer, 0, sizeof(rx_buffer));
-    rx_index = 0;
-}
+
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -188,15 +182,15 @@ int main(void)
 
 	char *movement_angle_str = strtok(NULL, "-");
 	int movement_angle_int = atoi(movement_angle_str); // Convert the second received string to integer
-	int value = atoi(rx_buffer); // Convert received string to integer
-	sprintf(tx_data, "STM32: %d", value);
-	HAL_UART_Transmit(&huart4, (uint8_t*)tx_data, strlen(tx_data), HAL_MAX_DELAY);
+	sprintf(tx_data, "Value: %d\n", movement_angle_int);
+	tx_data[strlen(tx_data)] = '\0';
+	send_echo(tx_data);
+	memset(tx_data, 0, sizeof(tx_data));
 	memset(rx_buffer, 0, sizeof(rx_buffer));
 	rx_index = 0;
 	rx_buffer[rx_index] = '\0';
 	start_detected = false;
-	printf ("Value: %d\n", value);
-//	send_echo("received");
+
 	if (movement_angle_int >= 0 && movement_angle_int <= 255) { // Check if the value is within valid range
 		  moveRobotArmJoint(movement_angle_int, ccr_register); // Call the setCCR2Value() function with the received value
 	  }
