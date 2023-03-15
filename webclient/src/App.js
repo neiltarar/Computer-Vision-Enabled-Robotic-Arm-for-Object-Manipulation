@@ -10,8 +10,22 @@ function App() {
     setCommand(event.target.value)
   }  
 
+  const handleKeyPress = (event) => {
+    if(event.keyCode ==13) {
+      fetch('/command', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ command })
+    })
+      .then(response => response.json())
+      .then(data => console.log(data))
+      .catch(error => console.error(error));
+    } 
+  }
+
   const handleClick = () => {
-    console.log(command)
     fetch('/command', {
       method: 'POST',
       headers: {
@@ -31,6 +45,7 @@ function App() {
         <UserInput 
           handleChange = {handleChange}
           handleClick = {handleClick}
+          handleKeyPress = {handleKeyPress}
         />
         <div>
           <h1>Live Video Stream</h1>

@@ -130,3 +130,6 @@ venv/
 /lib
 
 /.metadata
+
+# production
+# /build
