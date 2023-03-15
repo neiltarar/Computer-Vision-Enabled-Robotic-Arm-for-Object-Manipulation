@@ -8,8 +8,9 @@ class Pipeline:
         self.pipeline = dai.Pipeline()
         self.rgb_cam = self.pipeline.createColorCamera()
         self.rgb_cam.setColorOrder(dai.ColorCameraProperties.ColorOrder.BGR)
-        self.rgb_cam.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
-        self.rgb_cam.setPreviewSize(960, 540)
+        self.rgb_cam.setResolution(dai.ColorCameraProperties.SensorResolution.THE_4_K)
+        self.rgb_cam.setInterleaved(False)
+        self.rgb_cam.setPreviewSize(780, 600)
 
         # connect to the rgb camera on the device
         print("Creating RGB Cam")
