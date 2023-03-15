@@ -1,4 +1,5 @@
 import UserInput from './UserInput/UserInput';
+import VideoStream from './VideoFeed/VideoStream';
 import {useState} from 'react'
 import './App.css';
 
@@ -24,13 +25,19 @@ function App() {
   }
 
   return (
-    <div className="App">
-     <h1>User Interface For the Flask App</h1>
-     <UserInput 
-      handleChange = {handleChange}
-      handleClick = {handleClick}
-     />
-    </div>
+    <>
+      <div className="App">
+        <h1>User Interface For the Flask App</h1>
+        <UserInput 
+          handleChange = {handleChange}
+          handleClick = {handleClick}
+        />
+        <div>
+          <h1>Live Video Stream</h1>
+          <VideoStream />
+        </div>
+      </div>
+    </>
   );
 }
 
