@@ -13,6 +13,10 @@ pipeline = Pipeline()
 
 def generate_frames():
     with dai.Device(pipeline.pipeline) as device:
+        calib_data = device.readCalibration()
+        calib_lens_pos = calib_data.getLensPosition(dai.CameraBoardSocket.RGB)
+        print(f"RGB calibration lens position: {calib_lens_pos}")
+        pipeline.rgb_cam.initialControl.setManualFocus(calib_lens_pos)
         frame_queue = device.getOutputQueue(name="frame", maxSize=1, blocking=False)
         sleep(0.01)
         while True:
