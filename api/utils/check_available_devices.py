@@ -10,4 +10,5 @@ def check_available_devices():
         check_available_devices()
     else:
         print(f"Found {len(available_devices)} device(s)")
-        return available_devices[0]
+        my_device = dai.Device()
+        return my_device
