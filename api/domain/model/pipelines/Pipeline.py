@@ -50,7 +50,7 @@ class Pipeline:
         self.laconic = None == "rgb_laconic"  # Camera frames are not sent to the host
         self.use_gesture = False
         self.resolution = (1920, 1080)
-
+        self.pd_input_length = 128
         self.internal_fps = 29
         self.video_fps = self.internal_fps  # Used when saving the output in a video file. Should be close to the real fps
         self.create_pipeline()
@@ -119,7 +119,7 @@ class Pipeline:
 
         # Image manipulation Nodes
         self.palm_det_manip_node = self.pipeline.create(dai.node.ImageManip)
-        self.palm_det_manip_node.setMaxOutputFrameSize(128*128*3)
+        self.palm_det_manip_node.setMaxOutputFrameSize(self.pd_input_length*self.pd_input_length*3)
         self.palm_det_manip_node.setWaitForConfigInput(True)
         self.palm_det_manip_node.inputImage.setQueueSize(1)
         self.palm_det_manip_node.inputImage.setBlocking(False)
@@ -129,19 +129,20 @@ class Pipeline:
         self.pre_hand_landmark_manip_node.setWaitForConfigInput(True)
         self.pre_hand_landmark_manip_node.inputImage.setQueueSize(1)
         self.pre_hand_landmark_manip_node.inputImage.setBlocking(False)
+
         # create xlinkout(s)
         self.xlink_rgb_out = self.pipeline.create(dai.node.XLinkOut)
         self.xlink_rgb_out.setStreamName("frame")
 
-        self.xlink_spatial_data_out = self.pipeline.createXLinkOut()
-        self.xlink_spatial_data_out.setStreamName("spatial_data_out")
+        # self.xlink_spatial_data_out = self.pipeline.createXLinkOut()
+        # self.xlink_spatial_data_out.setStreamName("spatial_data_out")
 
         self.xlink_palm_det_out = self.pipeline.createXLinkOut()
         self.xlink_palm_det_out.setStreamName("palm_det_out")
 
         # create xlinkin(s)
-        self.xlink_spatial_calc_config_in = self.pipeline.createXLinkIn()
-        self.xlink_spatial_calc_config_in.setStreamName("spatial_calc_config_in")
+        # self.xlink_spatial_calc_config_in = self.pipeline.createXLinkIn()
+        # self.xlink_spatial_calc_config_in.setStreamName("spatial_calc_config_in")
         # link nodes
         self.link_nodes(self.rgb_cam,
                         self.mono_left,
@@ -155,8 +156,8 @@ class Pipeline:
                         self.palm_det_manip_node,
                         self.pre_hand_landmark_manip_node,
                         self.xlink_rgb_out,
-                        self.xlink_spatial_data_out,
-                        self.xlink_spatial_calc_config_in,
+                        # self.xlink_spatial_data_out,
+                        # self.xlink_spatial_calc_config_in,
                         self.xlink_palm_det_out)
 
     def link_nodes(self,
@@ -172,8 +173,8 @@ class Pipeline:
                    palm_det_manip_node,
                    pre_hand_landmark_manip_node,
                    xlink_rgb_out,
-                   xlink_spatial_data_out,
-                   xlink_spatial_calc_config_in,
+                   # xlink_spatial_data_out,
+                   # xlink_spatial_calc_config_in,
                    xlink_palm_det_out):
         print("linking nodes")
         mono_left.out.link(stereo.left)
@@ -182,8 +183,6 @@ class Pipeline:
         stereo.depth.link(spatial_location_calculator.inputDepth)
         script.outputs['spatial_location_config'].link(spatial_location_calculator.inputConfig)
         spatial_location_calculator.out.link(script.inputs['spatial_data'])
-        spatial_location_calculator.out.link(xlink_spatial_data_out.input)
-        xlink_spatial_calc_config_in.out.link(spatial_location_calculator.inputConfig)
 
         rgb_cam.video.link(xlink_rgb_out.input)
         rgb_cam.preview.link(palm_det_manip_node.inputImage)
