@@ -1,7 +1,13 @@
 import serial
 from time import sleep
+from dotenv import load_dotenv
+import os
 
-def send_receive_serial_data(command, port="/dev/ttyS0", baudrate=9600):
+load_dotenv()
+machine = os.getenv("MACHINE_NAME")
+port = "/dev/ttyUSB0" if machine == "pc" else "/dev/ttyS0"
+
+def send_receive_serial_data(command, port="/dev/ttyUSB0", baudrate=9600):
     ser = serial.Serial(port, baudrate, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
                         bytesize=serial.EIGHTBITS, timeout=0.1)
 

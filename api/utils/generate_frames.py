@@ -4,6 +4,7 @@ import depthai as dai
 from utils.check_available_devices import check_available_devices
 from utils.convert_hand_yaw_to_robot_yaw import convert_hand_yaw_to_robot_yaw
 from domain.model.pipelines.Pipeline import Pipeline
+from utils.serial_communication import send_receive_serial_data
 from time import sleep
 import marshal
 import cv2
@@ -53,6 +54,7 @@ def generate_frames():
 
                     if robot_yaw is not None:
                         print(f"Robot yaw angle: {robot_yaw} \t hand_y:{hand.rotation}")
+                        send_receive_serial_data(f"BASE1-{robot_yaw}")
                     else:
                         print("Yaw value out of range.")
                     hands.append(hand)

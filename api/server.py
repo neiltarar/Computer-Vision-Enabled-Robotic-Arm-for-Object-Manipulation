@@ -1,9 +1,7 @@
 from flask import Flask, Response, send_from_directory, request
 # from waitress import serve
 from utils.serial_communication import send_receive_serial_data
-
 from utils.generate_frames import generate_frames
-from time import sleep
 
 app = Flask(__name__, static_folder="../webclient/build")
 
