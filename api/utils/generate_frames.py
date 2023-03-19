@@ -50,13 +50,13 @@ def generate_frames():
                 hands = []
                 for i in range(len(palm_det_data.get("lm_score", []))):
                     hand = pipeline.extract_hand_data(palm_det_data, i)
-                    robot_yaw = convert_hand_yaw_to_robot_yaw(hand.rotation, sensitivity=0, rounding_multiple=6)
+                    print(hand.rotation)
+                    # robot_yaw = convert_hand_yaw_to_robot_yaw(hand.rotation, sensitivity=0, rounding_multiple=6)
+                    #
+                    # if robot_yaw is not None:
+                    #     print(f"Robot yaw angle: {robot_yaw} \t hand_y:{hand.rotation}")
+                    #     send_receive_serial_data(f"BASE1-{robot_yaw}")
 
-                    if robot_yaw is not None:
-                        print(f"Robot yaw angle: {robot_yaw} \t hand_y:{hand.rotation}")
-                        send_receive_serial_data(f"BASE1-{robot_yaw}")
-                    else:
-                        print("Yaw value out of range.")
                     hands.append(hand)
                 cvFrame = frame.getCvFrame()
                 _, img_encoded = cv2.imencode('.jpg', cvFrame)
