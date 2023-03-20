@@ -46,12 +46,11 @@
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
 UART_HandleTypeDef huart4;
+/* USER CODE BEGIN PV */
 typedef enum {
   BASE1,
   ARM3
 } CCR_Register;
-/* USER CODE BEGIN PV */
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,14 +58,18 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_UART4_Init(void);
-static void moveRobotArmJoint(uint32_t value, CCR_Register ccr_register) {
+/* USER CODE BEGIN PFP */
+static void moveRobotArmJoint(uint32_t angle, CCR_Register ccr_register) {
+
+	uint32_t CCR = (uint32_t)((angle / 180.0) * 2000 + 2000);
+
 	  switch (ccr_register) {
 	    case BASE1:
-	      htim2.Instance->CCR1 = value;
+	      htim2.Instance->CCR1 = CCR;
 	      HAL_Delay(600);
 	      break;
 	    case ARM3:
-	      htim2.Instance->CCR2 = value;
+	      htim2.Instance->CCR2 = CCR;
 	      HAL_Delay(600);
 	      break;
 	    default:
@@ -78,10 +81,6 @@ static void moveRobotArmJoint(uint32_t value, CCR_Register ccr_register) {
 static void send_echo(const char* message) {
     HAL_UART_Transmit(&huart4, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
 }
-
-
-/* USER CODE BEGIN PFP */
-
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -191,7 +190,7 @@ int main(void)
 	rx_buffer[rx_index] = '\0';
 	start_detected = false;
 
-	if (movement_angle_int >= 0 && movement_angle_int <= 255) { // Check if the value is within valid range
+	if (movement_angle_int >= 0 && movement_angle_int <= 180) { // Check if the value is within valid range
 		  moveRobotArmJoint(movement_angle_int, ccr_register); // Call the setCCR2Value() function with the received value
 	  }
 	ccr_register = 0;
@@ -267,9 +266,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 840;
+  htim2.Init.Prescaler = 41;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 999;
+  htim2.Init.Period = 39999;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
