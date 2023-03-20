@@ -45,11 +45,14 @@
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
+
 UART_HandleTypeDef huart4;
+
 /* USER CODE BEGIN PV */
 typedef enum {
   BASE1,
-  ARM3
+  ARM3,
+  ARM4
 } CCR_Register;
 /* USER CODE END PV */
 
@@ -72,6 +75,10 @@ static void moveRobotArmJoint(uint32_t angle, CCR_Register ccr_register) {
 	      htim2.Instance->CCR2 = CCR;
 	      HAL_Delay(600);
 	      break;
+	    case ARM4:
+		  htim2.Instance->CCR3 = CCR;
+		  HAL_Delay(600);
+		  break;
 	    default:
 	      // handle error case
 	      break;
@@ -114,6 +121,7 @@ int main(void)
 
   /* Configure the system clock */
   SystemClock_Config();
+
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
@@ -127,7 +135,8 @@ int main(void)
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   	// ARM 3
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-
+	// ARM 4
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -135,7 +144,7 @@ int main(void)
 
 	while (1)
   {
-	/* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 	 printf("Waiting for Rx data...\n");
@@ -174,6 +183,8 @@ int main(void)
 	    ccr_register = BASE1;
 	} else if (strcmp(JOINT, "ARM3") == 0) {
 	    ccr_register = ARM3;
+	} else if (strcmp(JOINT, "ARM4") == 0) {
+	    ccr_register = ARM4;
 	} else {
 	    // Handle error case
 	    continue; // Set to a default value
@@ -299,6 +310,10 @@ static void MX_TIM2_Init(void)
     Error_Handler();
   }
   if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
   {
     Error_Handler();
   }
