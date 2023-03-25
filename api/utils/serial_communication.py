@@ -12,7 +12,7 @@ def send_receive_serial_data(command, port="/dev/ttyUSB0", baudrate=9600):
                         bytesize=serial.EIGHTBITS, timeout=0.1)
 
     while True:
-        data = "#" + command + "\n"
+        data = "#" + str(command) + "\n"
         ser.write(data.encode())
         print("Sent data:", data)
         sleep(0.5)

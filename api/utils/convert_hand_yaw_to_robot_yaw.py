@@ -4,7 +4,7 @@ def round_to_nearest_multiple(number, multiple):
 def convert_hand_yaw_to_robot_yaw(value, sensitivity=0, rounding_multiple=5):
     # Define the input range and output range
     input_min, input_max = 0.18, -0.48
-    output_min, output_max = 35, 255
+    output_min, output_max = 0, 180
 
     # Check if the value is within the input range
     if input_max <= value <= input_min:
