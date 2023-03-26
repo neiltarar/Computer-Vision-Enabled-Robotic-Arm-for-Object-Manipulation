@@ -1,6 +1,7 @@
 import time
-
 import depthai as dai
+import utils.mediapipe_utils as mp
+
 
 from domain.model.cv_draw.DrawOnDetection import DrawOnDetection
 from utils.check_available_devices import check_available_devices
@@ -57,14 +58,14 @@ def generate_frames(lm_threshold):
                 for i in range(len(palm_det_data.get("lm_score", []))):
                     hand = pipeline.extract_hand_data(palm_det_data, i)
                     if hand.lm_score > lm_threshold:
+                        mp.recognize_gesture(hand)
                         # hand_x, hand_y, hand_z = hand.xyz
                         hand_x, hand_y, hand_z = [coord / 10 for coord in hand.xyz]
 
                         draw.draw_hand(hand, cvFrame)
                         robot_yaw = convert_hand_yaw_to_robot_yaw(hand_x, sensitivity=0, rounding_multiple=6)
                         robot_tilt_arm2 = convert_hand_y_to_robot_arm2_tilt(hand_y, sensitivity=0, rounding_multiple=6)
-
-                        print(f"Robot yaw angle: {robot_tilt_arm2} \t hand_y:{hand_y}")
+                        print(hand.gesture)
 
                         send_receive_serial_data(f"BASE1-{robot_yaw}")
                         sleep(0.1)
