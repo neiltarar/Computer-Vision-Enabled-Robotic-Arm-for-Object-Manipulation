@@ -59,10 +59,12 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define BASE_1_CH1_Pin GPIO_PIN_15
-#define BASE_1_CH1_GPIO_Port GPIOA
-#define ARM_3_CH2_Pin GPIO_PIN_3
-#define ARM_3_CH2_GPIO_Port GPIOB
+#define ARM4_TIM2_CH3_Pin GPIO_PIN_10
+#define ARM4_TIM2_CH3_GPIO_Port GPIOB
+#define BASE_1_TIM2_CH1_Pin GPIO_PIN_15
+#define BASE_1_TIM2_CH1_GPIO_Port GPIOA
+#define ARM_3_TIM2_CH2_Pin GPIO_PIN_3
+#define ARM_3_TIM2_CH2_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

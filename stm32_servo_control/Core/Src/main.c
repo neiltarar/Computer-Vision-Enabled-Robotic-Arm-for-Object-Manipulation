@@ -50,9 +50,9 @@ UART_HandleTypeDef huart4;
 
 /* USER CODE BEGIN PV */
 typedef enum {
-  BASE1,
-  ARM3,
-  ARM4
+  BASE1, // PIN: PA15
+  ARM2,  // PIN: PB3
+  ARM4   // PIN: PB10
 } CCR_Register;
 /* USER CODE END PV */
 
@@ -71,7 +71,7 @@ static void moveRobotArmJoint(uint32_t angle, CCR_Register ccr_register) {
 	      htim2.Instance->CCR1 = CCR;
 	      HAL_Delay(600);
 	      break;
-	    case ARM3:
+	    case ARM2:
 	      htim2.Instance->CCR2 = CCR;
 	      HAL_Delay(600);
 	      break;
@@ -131,11 +131,11 @@ int main(void)
   MX_TIM2_Init();
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
-    // BASE 1
+    // BASE 1 - PIN: PA15
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-  	// ARM 3
+  	// ARM 2 - PIN: PB3
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-	// ARM 4
+	// ARM 4 - PIN: PB10
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
   /* USER CODE END 2 */
 
@@ -181,8 +181,8 @@ int main(void)
 	CCR_Register ccr_register;
 	if (strcmp(JOINT, "BASE1") == 0) {
 	    ccr_register = BASE1;
-	} else if (strcmp(JOINT, "ARM3") == 0) {
-	    ccr_register = ARM3;
+	} else if (strcmp(JOINT, "ARM2") == 0) {
+	    ccr_register = ARM2;
 	} else if (strcmp(JOINT, "ARM4") == 0) {
 	    ccr_register = ARM4;
 	} else {
