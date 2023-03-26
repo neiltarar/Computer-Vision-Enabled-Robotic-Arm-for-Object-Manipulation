@@ -98,7 +98,7 @@ static void moveRobotArmJoint(uint32_t angle, CCR_Register ccr_register) {
                     // handle error case
                     return;
             }
-            HAL_Delay(0.1); // Adjust the delay value to control the speed
+            HAL_Delay(0.3); // Adjust the delay value to control the speed
         }
     } else {
         for (; currentCCR >= targetCCR; currentCCR--) {
@@ -116,7 +116,7 @@ static void moveRobotArmJoint(uint32_t angle, CCR_Register ccr_register) {
                     // handle error case
                     return;
             }
-            HAL_Delay(0.1); // Adjust the delay value to control the speed
+            HAL_Delay(0.3); // Adjust the delay value to control the speed
         }
     }
 }

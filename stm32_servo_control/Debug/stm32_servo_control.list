@@ -1211,7 +1211,7 @@ static void moveRobotArmJoint(uint32_t angle, CCR_Register ccr_register) {
                     break;
  8000e3c:	bf00      	nop
             }
-            HAL_Delay(0.1); // Adjust the delay value to control the speed
+            HAL_Delay(0.3); // Adjust the delay value to control the speed
  8000e3e:	2000      	movs	r0, #0
  8000e40:	f000 fd78 	bl	8001934 <HAL_Delay>
         for (; currentCCR <= targetCCR; currentCCR++) {
@@ -1265,7 +1265,7 @@ static void moveRobotArmJoint(uint32_t angle, CCR_Register ccr_register) {
                     break;
  8000e84:	bf00      	nop
             }
-            HAL_Delay(0.1); // Adjust the delay value to control the speed
+            HAL_Delay(0.3); // Adjust the delay value to control the speed
  8000e86:	2000      	movs	r0, #0
  8000e88:	f000 fd54 	bl	8001934 <HAL_Delay>
         for (; currentCCR >= targetCCR; currentCCR--) {
