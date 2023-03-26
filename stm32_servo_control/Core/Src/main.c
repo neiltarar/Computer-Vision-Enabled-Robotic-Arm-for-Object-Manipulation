@@ -64,25 +64,61 @@ static void MX_UART4_Init(void);
 /* USER CODE BEGIN PFP */
 static void moveRobotArmJoint(uint32_t angle, CCR_Register ccr_register) {
 
-	uint32_t CCR = (uint32_t)((angle / 180.0) * 2000 + 2000);
+    uint32_t targetCCR = (uint32_t)((angle / 180.0) * 2000 + 2000);
+    uint32_t currentCCR;
 
-	  switch (ccr_register) {
-	    case BASE1:
-	      htim2.Instance->CCR1 = CCR;
-	      HAL_Delay(600);
-	      break;
-	    case ARM2:
-	      htim2.Instance->CCR2 = CCR;
-	      HAL_Delay(600);
-	      break;
-	    case ARM4:
-		  htim2.Instance->CCR3 = CCR;
-		  HAL_Delay(600);
-		  break;
-	    default:
-	      // handle error case
-	      break;
-	  }
+    switch (ccr_register) {
+        case BASE1:
+            currentCCR = htim2.Instance->CCR1;
+            break;
+        case ARM2:
+            currentCCR = htim2.Instance->CCR2;
+            break;
+        case ARM4:
+            currentCCR = htim2.Instance->CCR3;
+            break;
+        default:
+            // handle error case
+            return;
+    }
+
+    if (currentCCR < targetCCR) {
+        for (; currentCCR <= targetCCR; currentCCR++) {
+            switch (ccr_register) {
+                case BASE1:
+                    htim2.Instance->CCR1 = currentCCR;
+                    break;
+                case ARM2:
+                    htim2.Instance->CCR2 = currentCCR;
+                    break;
+                case ARM4:
+                    htim2.Instance->CCR3 = currentCCR;
+                    break;
+                default:
+                    // handle error case
+                    return;
+            }
+            HAL_Delay(0.3); // Adjust the delay value to control the speed
+        }
+    } else {
+        for (; currentCCR >= targetCCR; currentCCR--) {
+            switch (ccr_register) {
+                case BASE1:
+                    htim2.Instance->CCR1 = currentCCR;
+                    break;
+                case ARM2:
+                    htim2.Instance->CCR2 = currentCCR;
+                    break;
+                case ARM4:
+                    htim2.Instance->CCR3 = currentCCR;
+                    break;
+                default:
+                    // handle error case
+                    return;
+            }
+            HAL_Delay(0.3); // Adjust the delay value to control the speed
+        }
+    }
 }
 
 static void send_echo(const char* message) {

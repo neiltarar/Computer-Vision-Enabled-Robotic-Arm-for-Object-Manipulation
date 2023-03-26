@@ -37,12 +37,12 @@ def generate_frames(lm_threshold):
 
             while time.time() - start_time < timeout_sec:
                 try:
-                    frame = frame_queue.get()
+                    frame = frame_queue.tryGet()
                 except RuntimeError:
                     frame = None
 
                 try:
-                    palm_det_data = palm_det_queue.get()
+                    palm_det_data = palm_det_queue.tryGet()
                 except RuntimeError:
                     palm_det_data = None
 
@@ -75,10 +75,10 @@ def generate_frames(lm_threshold):
                 yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(img_encoded) + b'\r\n')
 
             else:
-                sleep(0.01)
+                sleep(0.1)
     except Exception as e:
         print(f"ERROR OCCURRED: \n{e}")
-        generate_frames(0.5)
+        generate_frames(lm_threshold)
 
     device.close()
     cv2.destroyAllWindows()
