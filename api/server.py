@@ -26,7 +26,8 @@ def handle_command():
 
 @app.route('/video_feed')
 def video_feed():
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    lm_threshold = 0.4
+    return Response(generate_frames(lm_threshold), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 if __name__ == "__main__":
