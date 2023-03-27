@@ -18,7 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
@@ -32,6 +31,8 @@
 /* USER CODE BEGIN PTD */
 #define RX_BUFFER_SIZE 32
 #define TX_BUFFER_SIZE 32
+#define NUM_JOINTS 4
+#define JOINT_NAME_SIZE 5
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -45,7 +46,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
-
 UART_HandleTypeDef huart4;
 
 /* USER CODE BEGIN PV */
@@ -140,6 +140,8 @@ int main(void)
   /* USER CODE BEGIN 1 */
 	char rx_buffer[RX_BUFFER_SIZE];
 	char tx_data[TX_BUFFER_SIZE];
+	char joint_names[NUM_JOINTS][JOINT_NAME_SIZE] = {"BASE1", "ARM2", "ARM4", "CLAW7"};
+	int joint_values[NUM_JOINTS];
 	uint8_t rx_data;
 	int rx_index = 0;
 	bool start_detected = false;
@@ -183,17 +185,18 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	 printf("Waiting for Rx data...\n");
-		start_detected = false;
-		while (!start_detected)
+//	 printf("Waiting for Rx data...\n");
+		// waiting for a # as the start character
+	start_detected = false;
+	while (!start_detected)
+	{
+		HAL_UART_Receive(&huart4, &rx_data, 1, HAL_MAX_DELAY);
+		if (rx_data == '#')
 		{
-			HAL_UART_Receive(&huart4, &rx_data, 1, HAL_MAX_DELAY);
-			if (rx_data == '#')
-			{
-				start_detected = true;
-				rx_index = 0;
-			}
+			start_detected = true;
+			rx_index = 0;
 		}
+	}
 
 	while(rx_data != '\n' && rx_index < RX_BUFFER_SIZE - 1 && start_detected == true) {
 		// Receive next byte
@@ -203,44 +206,52 @@ int main(void)
 		rx_index++;
 	}
 
-	// Split the received data into two variables at '-'
-	char *value_str = strtok(rx_buffer, "-");
-	char my_string[5];
-	char JOINT[5];
-	strcpy(my_string, value_str);
-	for(int i=0; i<sizeof(my_string);i++){
-	    JOINT[i] = my_string[i];
-	}
-	JOINT[sizeof(my_string)] = '\0';
+		char *joint_split_str = strtok(rx_buffer, ",");
+		char my_string[5];
+		char JOINT[5];
+		int movement_angle_int;
 
-	// Determine the CCR register based on joint name
-	CCR_Register ccr_register;
-	if (strcmp(JOINT, "BASE1") == 0) {
-	    ccr_register = BASE1;
-	} else if (strcmp(JOINT, "ARM2") == 0) {
-	    ccr_register = ARM2;
-	} else if (strcmp(JOINT, "ARM4") == 0) {
-	    ccr_register = ARM4;
-	} else {
-	    // Handle error case
-	    continue; // Set to a default value
-	}
+		while (joint_split_str != NULL) {
 
-	char *movement_angle_str = strtok(NULL, "-");
-	int movement_angle_int = atoi(movement_angle_str); // Convert the second received string to integer
-	sprintf(tx_data, "Value: %d\n", movement_angle_int);
-	tx_data[strlen(tx_data)] = '\0';
-	send_echo(tx_data);
-	memset(tx_data, 0, sizeof(tx_data));
-	memset(rx_buffer, 0, sizeof(rx_buffer));
+		    sscanf(joint_split_str, "%[^-]-%d", my_string, &movement_angle_int);
+
+		    for(int i=0; i<sizeof(my_string);i++){
+		        JOINT[i] = my_string[i];
+		    }
+		    JOINT[sizeof(my_string)] = '\0';
+
+		    // Determine the CCR register based on joint name
+		    CCR_Register ccr_register;
+		    if (strcmp(JOINT, "BASE1") == 0) {
+		        ccr_register = BASE1;
+		    } else if (strcmp(JOINT, "ARM2") == 0) {
+		        ccr_register = ARM2;
+		    } else if (strcmp(JOINT, "ARM4") == 0) {
+		        ccr_register = ARM4;
+		    } else {
+		        // Handle error case
+		        continue; // Set to a default value
+		    }
+
+		    sprintf(tx_data, "Value: %d\n", movement_angle_int);
+		    tx_data[strlen(tx_data)] = '\0';
+		    send_echo(tx_data);
+		    memset(tx_data, 0, sizeof(tx_data));
+		    memset(JOINT, 0, sizeof(JOINT));
+		    memset(my_string, 0, sizeof(my_string));
+		    if (movement_angle_int >= 0 && movement_angle_int <= 180) { // Check if the value is within valid range
+		        moveRobotArmJoint(movement_angle_int, ccr_register); // Call the moveRobotArmJoint() function with the received value
+		    }
+		    ccr_register = 0;
+		    joint_split_str = strtok(NULL, ",");
+		}
+
 	rx_index = 0;
 	rx_buffer[rx_index] = '\0';
+	memset(rx_buffer, 0, sizeof(rx_buffer));
 	start_detected = false;
+	// Split the received data into two variables at '-'
 
-	if (movement_angle_int >= 0 && movement_angle_int <= 180) { // Check if the value is within valid range
-		  moveRobotArmJoint(movement_angle_int, ccr_register); // Call the setCCR2Value() function with the received value
-	  }
-	ccr_register = 0;
 //	  resetRxBuffer(rx_buffer, rx_index);
   }
 
