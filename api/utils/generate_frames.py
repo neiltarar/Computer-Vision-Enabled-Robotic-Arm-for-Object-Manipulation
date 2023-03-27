@@ -1,4 +1,5 @@
 import time
+import threading
 import depthai as dai
 import utils.mediapipe_utils as mp
 
@@ -31,6 +32,7 @@ def generate_frames(lm_threshold):
 
         timeout_ms = 50
         timeout_sec = timeout_ms / 1000
+        count = 0
 
         while True:
             start_time = time.time()
@@ -53,6 +55,7 @@ def generate_frames(lm_threshold):
                     sleep(0.01)
 
             if frame is not None and palm_det_data is not None:
+                robot_commands = []
                 cvFrame = frame.getCvFrame()
                 palm_det_data = marshal.loads(palm_det_data.getData())
                 for i in range(len(palm_det_data.get("lm_score", []))):
@@ -65,13 +68,14 @@ def generate_frames(lm_threshold):
                         draw.draw_hand(hand, cvFrame)
                         robot_yaw = convert_hand_yaw_to_robot_yaw(hand_x, sensitivity=0, rounding_multiple=6)
                         robot_tilt_arm2 = convert_hand_y_to_robot_arm2_tilt(hand_y, sensitivity=0, rounding_multiple=6)
-                        print(hand.gesture)
-
-                        send_receive_serial_data(f"BASE1-{robot_yaw}")
-                        sleep(0.1)
-                        send_receive_serial_data(f"ARM2-{robot_tilt_arm2}")
-
-
+                        robot_commands.extend([f"BASE1-{robot_yaw}", f"ARM2-{robot_tilt_arm2}"])
+                        # print(hand.gesture)
+                        count += 0.1
+                        if count > 1:
+                            threading.Thread(target=send_receive_serial_data, args=(f"BASE1-{robot_yaw}",)).start()
+                        if count > 1.3:
+                            threading.Thread(target=send_receive_serial_data, args=(f"ARM2-{robot_tilt_arm2}",)).start()
+                            count = 0
                 _, img_encoded = cv2.imencode('.jpg', cvFrame)
                 yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(img_encoded) + b'\r\n')
 
