@@ -31,7 +31,7 @@
 /* USER CODE BEGIN PTD */
 #define RX_BUFFER_SIZE 32
 #define TX_BUFFER_SIZE 32
-#define NUM_JOINTS 3
+#define NUM_JOINTS 4
 #define JOINT_NAME_SIZE 5
 /* USER CODE END PTD */
 
@@ -47,8 +47,7 @@
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
 UART_HandleTypeDef huart4;
-uint32_t targetCCRs[NUM_JOINTS];
-uint32_t currentCCRs[NUM_JOINTS];
+
 /* USER CODE BEGIN PV */
 typedef enum {
   BASE1, // PIN: PA15
@@ -63,67 +62,61 @@ static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_UART4_Init(void);
 /* USER CODE BEGIN PFP */
-static void moveRobotArmJoint(uint32_t angles[NUM_JOINTS], CCR_Register ccr_registers[NUM_JOINTS]) {
-    uint32_t targetCCRs[NUM_JOINTS];
-    uint32_t currentCCRs[NUM_JOINTS];
+static void moveRobotArmJoint(uint32_t angle, CCR_Register ccr_register) {
 
-    for (int i = 0; i < NUM_JOINTS; i++) {
-        targetCCRs[i] = (uint32_t)((angles[i] / 180.0) * 2000 + 2000);
-        switch (ccr_registers[i]) {
-            case BASE1:
-                currentCCRs[i] = htim2.Instance->CCR1;
-                break;
-            case ARM2:
-                currentCCRs[i] = htim2.Instance->CCR2;
-                break;
-            case ARM4:
-                currentCCRs[i] = htim2.Instance->CCR3;
-                break;
-            default:
-                // handle error case
-                return;
-        }
+    uint32_t targetCCR = (uint32_t)((angle / 180.0) * 2000 + 2000);
+    uint32_t currentCCR;
+
+    switch (ccr_register) {
+        case BASE1:
+            currentCCR = htim2.Instance->CCR1;
+            break;
+        case ARM2:
+            currentCCR = htim2.Instance->CCR2;
+            break;
+        case ARM4:
+            currentCCR = htim2.Instance->CCR3;
+            break;
+        default:
+            // handle error case
+            return;
     }
 
-    uint32_t startTime = HAL_GetTick();
-    uint32_t elapsedTime = 0;
-    while (1) {
-        uint8_t jointsCompleted = 0;
-        elapsedTime = HAL_GetTick() - startTime;
-
-        for (int i = 0; i < NUM_JOINTS; i++) {
-            if (currentCCRs[i] == targetCCRs[i]) {
-                jointsCompleted++;
-                continue;
+    if (currentCCR < targetCCR) {
+        for (; currentCCR <= targetCCR; currentCCR++) {
+            switch (ccr_register) {
+                case BASE1:
+                    htim2.Instance->CCR1 = currentCCR;
+                    break;
+                case ARM2:
+                    htim2.Instance->CCR2 = currentCCR;
+                    break;
+                case ARM4:
+                    htim2.Instance->CCR3 = currentCCR;
+                    break;
+                default:
+                    // handle error case
+                    return;
             }
-
-            if (elapsedTime >= 0.3) { // Adjust the delay value to control the speed
-                startTime = HAL_GetTick();
-                if (currentCCRs[i] < targetCCRs[i]) {
-                    currentCCRs[i]++;
-                } else {
-                    currentCCRs[i]--;
-                }
-
-                switch (ccr_registers[i]) {
-                    case BASE1:
-                        htim2.Instance->CCR1 = currentCCRs[i];
-                        break;
-                    case ARM2:
-                        htim2.Instance->CCR2 = currentCCRs[i];
-                        break;
-                    case ARM4:
-                        htim2.Instance->CCR3 = currentCCRs[i];
-                        break;
-                    default:
-                        // handle error case
-                        return;
-                }
-            }
+            HAL_Delay(0.3); // Adjust the delay value to control the speed
         }
-
-        if (jointsCompleted == NUM_JOINTS) {
-            break;
+    } else {
+        for (; currentCCR >= targetCCR; currentCCR--) {
+            switch (ccr_register) {
+                case BASE1:
+                    htim2.Instance->CCR1 = currentCCR;
+                    break;
+                case ARM2:
+                    htim2.Instance->CCR2 = currentCCR;
+                    break;
+                case ARM4:
+                    htim2.Instance->CCR3 = currentCCR;
+                    break;
+                default:
+                    // handle error case
+                    return;
+            }
+            HAL_Delay(0.3); // Adjust the delay value to control the speed
         }
     }
 }
@@ -147,6 +140,8 @@ int main(void)
   /* USER CODE BEGIN 1 */
 	char rx_buffer[RX_BUFFER_SIZE];
 	char tx_data[TX_BUFFER_SIZE];
+	char joint_names[NUM_JOINTS][JOINT_NAME_SIZE] = {"BASE1", "ARM2", "ARM4", "CLAW7"};
+	int joint_values[NUM_JOINTS];
 	uint8_t rx_data;
 	int rx_index = 0;
 	bool start_detected = false;
@@ -215,11 +210,8 @@ int main(void)
 		char my_string[5];
 		char JOINT[5];
 		int movement_angle_int;
-		CCR_Register ccr_registers[NUM_JOINTS];
-		uint32_t angles[NUM_JOINTS];
-		int joint_count = 0;
 
-		while (joint_split_str != NULL && joint_count < NUM_JOINTS) {
+		while (joint_split_str != NULL) {
 
 		    sscanf(joint_split_str, "%[^-]-%d", my_string, &movement_angle_int);
 
@@ -247,17 +239,13 @@ int main(void)
 		    memset(tx_data, 0, sizeof(tx_data));
 		    memset(JOINT, 0, sizeof(JOINT));
 		    memset(my_string, 0, sizeof(my_string));
-		    if (movement_angle_int >= 0 && movement_angle_int <= 180) {
-		            ccr_registers[joint_count] = ccr_register;
-		            angles[joint_count] = movement_angle_int;
-		            joint_count++;
-		        }
-			joint_split_str = strtok(NULL, ",");
+		    if (movement_angle_int >= 0 && movement_angle_int <= 180) { // Check if the value is within valid range
+		        moveRobotArmJoint(movement_angle_int, ccr_register); // Call the moveRobotArmJoint() function with the received value
+		    }
 		    ccr_register = 0;
-
+		    joint_split_str = strtok(NULL, ",");
 		}
-	// Call the modified moveRobotArmJoint function with arrays of joint names and values
-	moveRobotArmJoint(angles, ccr_registers);
+
 	rx_index = 0;
 	rx_buffer[rx_index] = '\0';
 	memset(rx_buffer, 0, sizeof(rx_buffer));
