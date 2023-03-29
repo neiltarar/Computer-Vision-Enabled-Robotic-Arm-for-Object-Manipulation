@@ -50,10 +50,16 @@ UART_HandleTypeDef huart4;
 
 /* USER CODE BEGIN PV */
 typedef enum {
-  BASE1, // PIN: PA15
-  ARM2,  // PIN: PB3
-  ARM4   // PIN: PB10
+	BASE1, // PIN: PA15
+	ARM2,  // PIN: PB3
+	ARM4   // PIN: PB10
 } CCR_Register;
+
+typedef struct {
+	CCR_Register ccr_register;
+	uint32_t targetCCR;
+	uint32_t currentCCR;
+} JointMove;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -62,62 +68,65 @@ static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_UART4_Init(void);
 /* USER CODE BEGIN PFP */
-static void moveRobotArmJoint(uint32_t angle, CCR_Register ccr_register) {
+static void moveRobotArmJoint(uint32_t angle[], CCR_Register ccr_register[], int num_joints) {
+    JointMove joint_moves[num_joints];
+    bool joints_moving[num_joints];
 
-    uint32_t targetCCR = (uint32_t)((angle / 180.0) * 2000 + 2000);
-    uint32_t currentCCR;
+    for (int i = 0; i < num_joints; i++) {
+        joint_moves[i].ccr_register = ccr_register[i];
+        joint_moves[i].targetCCR = (uint32_t)((angle[i] / 180.0) * 2000 + 2000);
+        joints_moving[i] = true;
 
-    switch (ccr_register) {
-        case BASE1:
-            currentCCR = htim2.Instance->CCR1;
-            break;
-        case ARM2:
-            currentCCR = htim2.Instance->CCR2;
-            break;
-        case ARM4:
-            currentCCR = htim2.Instance->CCR3;
-            break;
-        default:
-            // handle error case
-            return;
+        switch (ccr_register[i]) {
+            case BASE1:
+                joint_moves[i].currentCCR = htim2.Instance->CCR1;
+                break;
+            case ARM2:
+                joint_moves[i].currentCCR = htim2.Instance->CCR2;
+                break;
+            case ARM4:
+                joint_moves[i].currentCCR = htim2.Instance->CCR3;
+                break;
+            default:
+                // handle error case
+                return;
+        }
     }
 
-    if (currentCCR < targetCCR) {
-        for (; currentCCR <= targetCCR; currentCCR++) {
-            switch (ccr_register) {
-                case BASE1:
-                    htim2.Instance->CCR1 = currentCCR;
-                    break;
-                case ARM2:
-                    htim2.Instance->CCR2 = currentCCR;
-                    break;
-                case ARM4:
-                    htim2.Instance->CCR3 = currentCCR;
-                    break;
-                default:
-                    // handle error case
-                    return;
+    bool all_joints_reached_target = false;
+
+    while (!all_joints_reached_target) {
+        all_joints_reached_target = true;
+        for (int i = 0; i < num_joints; i++) {
+            if (joints_moving[i]) {
+                if (joint_moves[i].currentCCR < joint_moves[i].targetCCR) {
+                    joint_moves[i].currentCCR++;
+                } else if (joint_moves[i].currentCCR > joint_moves[i].targetCCR) {
+                    joint_moves[i].currentCCR--;
+                } else {
+                    joints_moving[i] = false;
+                    continue;
+                }
+
+                switch (joint_moves[i].ccr_register) {
+                    case BASE1:
+                        htim2.Instance->CCR1 = joint_moves[i].currentCCR;
+                        break;
+                    case ARM2:
+                        htim2.Instance->CCR2 = joint_moves[i].currentCCR;
+                        break;
+                    case ARM4:
+                        htim2.Instance->CCR3 = joint_moves[i].currentCCR;
+                        break;
+                    default:
+                        // handle error case
+                        return;
+                }
+
+                all_joints_reached_target = false;
             }
-            HAL_Delay(0.3); // Adjust the delay value to control the speed
         }
-    } else {
-        for (; currentCCR >= targetCCR; currentCCR--) {
-            switch (ccr_register) {
-                case BASE1:
-                    htim2.Instance->CCR1 = currentCCR;
-                    break;
-                case ARM2:
-                    htim2.Instance->CCR2 = currentCCR;
-                    break;
-                case ARM4:
-                    htim2.Instance->CCR3 = currentCCR;
-                    break;
-                default:
-                    // handle error case
-                    return;
-            }
-            HAL_Delay(0.3); // Adjust the delay value to control the speed
-        }
+        HAL_Delay(0.3); // Adjust the delay value to control the speed
     }
 }
 
@@ -140,8 +149,6 @@ int main(void)
   /* USER CODE BEGIN 1 */
 	char rx_buffer[RX_BUFFER_SIZE];
 	char tx_data[TX_BUFFER_SIZE];
-	char joint_names[NUM_JOINTS][JOINT_NAME_SIZE] = {"BASE1", "ARM2", "ARM4", "CLAW7"};
-	int joint_values[NUM_JOINTS];
 	uint8_t rx_data;
 	int rx_index = 0;
 	bool start_detected = false;
@@ -211,6 +218,10 @@ int main(void)
 		char JOINT[5];
 		int movement_angle_int;
 
+		uint32_t angles[NUM_JOINTS];
+		CCR_Register ccr_registers[NUM_JOINTS];
+		int joint_count = 0;
+
 		while (joint_split_str != NULL) {
 
 		    sscanf(joint_split_str, "%[^-]-%d", my_string, &movement_angle_int);
@@ -239,13 +250,20 @@ int main(void)
 		    memset(tx_data, 0, sizeof(tx_data));
 		    memset(JOINT, 0, sizeof(JOINT));
 		    memset(my_string, 0, sizeof(my_string));
+
 		    if (movement_angle_int >= 0 && movement_angle_int <= 180) { // Check if the value is within valid range
-		        moveRobotArmJoint(movement_angle_int, ccr_register); // Call the moveRobotArmJoint() function with the received value
+		            angles[joint_count] = movement_angle_int;
+		            ccr_registers[joint_count] = ccr_register;
+		            joint_count++;
 		    }
-		    ccr_register = 0;
+
+
 		    joint_split_str = strtok(NULL, ",");
 		}
 
+	if (joint_count > 0) {
+		moveRobotArmJoint(angles, ccr_registers, joint_count);
+	}
 	rx_index = 0;
 	rx_buffer[rx_index] = '\0';
 	memset(rx_buffer, 0, sizeof(rx_buffer));
