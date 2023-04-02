@@ -73,9 +73,9 @@ def generate_frames(lm_threshold):
                         elif hand.gesture == "FIVE":
                             robot_claw = 150
 
-                        robot_commands.extend([f"BASE1-{robot_yaw}", f"ARM2-{robot_tilt_arm2}",f"CLAW7-{robot_claw}"])
+                        robot_commands.extend([f"BASE1-{robot_yaw}", f"ARM2-{robot_tilt_arm2}",f"CLAW7-{robot_claw}\n"])
                         count += 0.1
-                        if count > 4:
+                        if count > 3:
                             total_command = ",".join(robot_commands)
                             threading.Thread(target=send_receive_serial_data, args=(total_command,)).start()
                             count = 0
