@@ -26,7 +26,7 @@ def handle_command():
 
 @app.route('/video_feed')
 def video_feed():
-    lm_threshold = 0.3
+    lm_threshold = 0.2
     return Response(generate_frames(lm_threshold), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 

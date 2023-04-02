@@ -32,6 +32,7 @@ def generate_frames(lm_threshold):
 
         timeout_ms = 50
         timeout_sec = timeout_ms / 1000
+        robot_claw = 0
         count = 0
 
         while True:
@@ -64,18 +65,23 @@ def generate_frames(lm_threshold):
                         mp.recognize_gesture(hand)
                         # hand_x, hand_y, hand_z = hand.xyz
                         hand_x, hand_y, hand_z = [coord / 10 for coord in hand.xyz]
-
                         draw.draw_hand(hand, cvFrame)
                         robot_yaw = convert_hand_yaw_to_robot_yaw(hand_x, sensitivity=0, rounding_multiple=6)
                         robot_tilt_arm2 = convert_hand_y_to_robot_arm2_tilt(hand_y, sensitivity=0, rounding_multiple=6)
-                        robot_commands.extend([f"BASE1-{robot_yaw}", f"ARM2-{robot_tilt_arm2}"])
-                        # print(hand.gesture)
+                        if hand.gesture == "FIST":
+                            robot_claw = 0
+                        elif hand.gesture == "FIVE":
+                            robot_claw = 150
+
+                        robot_commands.extend([f"BASE1-{robot_yaw}", f"ARM2-{robot_tilt_arm2}",f"CLAW7-{robot_claw}"])
                         count += 0.1
-                        if count > 1:
-                            threading.Thread(target=send_receive_serial_data, args=(f"BASE1-{robot_yaw}",)).start()
-                        if count > 1.3:
-                            threading.Thread(target=send_receive_serial_data, args=(f"ARM2-{robot_tilt_arm2}",)).start()
+                        if count > 4:
+                            total_command = ",".join(robot_commands)
+                            threading.Thread(target=send_receive_serial_data, args=(total_command,)).start()
                             count = 0
+                        # if count > 1.3:
+                        #     threading.Thread(target=send_receive_serial_data, args=(f"ARM2-{robot_tilt_arm2}",)).start()
+                        #     count = 0
                 _, img_encoded = cv2.imencode('.jpg', cvFrame)
                 yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(img_encoded) + b'\r\n')
 
