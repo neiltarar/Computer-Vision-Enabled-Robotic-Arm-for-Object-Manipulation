@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
@@ -52,7 +53,8 @@ UART_HandleTypeDef huart4;
 typedef enum {
 	BASE1, // PIN: PA15
 	ARM2,  // PIN: PB3
-	ARM4   // PIN: PB10
+	ARM4,   // PIN: PB10
+	CLAW7   // PIN: PB11
 } CCR_Register;
 
 typedef struct {
@@ -87,6 +89,9 @@ static void moveRobotArmJoint(uint32_t angle[], CCR_Register ccr_register[], int
             case ARM4:
                 joint_moves[i].currentCCR = htim2.Instance->CCR3;
                 break;
+            case CLAW7:
+				joint_moves[i].currentCCR = htim2.Instance->CCR4;
+				break;
             default:
                 // handle error case
                 return;
@@ -118,6 +123,9 @@ static void moveRobotArmJoint(uint32_t angle[], CCR_Register ccr_register[], int
                     case ARM4:
                         htim2.Instance->CCR3 = joint_moves[i].currentCCR;
                         break;
+                    case CLAW7:
+						htim2.Instance->CCR4 = joint_moves[i].currentCCR;
+						break;
                     default:
                         // handle error case
                         return;
@@ -182,6 +190,8 @@ int main(void)
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 	// ARM 4 - PIN: PB10
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
+	// CLAW 7 - PIN: PB11
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -239,6 +249,8 @@ int main(void)
 		        ccr_register = ARM2;
 		    } else if (strcmp(JOINT, "ARM4") == 0) {
 		        ccr_register = ARM4;
+		    } else if (strcmp(JOINT, "CLAW7") == 0) {
+		        ccr_register = CLAW7;
 		    } else {
 		        // Handle error case
 		        continue; // Set to a default value
@@ -256,8 +268,6 @@ int main(void)
 		            ccr_registers[joint_count] = ccr_register;
 		            joint_count++;
 		    }
-
-
 		    joint_split_str = strtok(NULL, ",");
 		}
 
@@ -378,6 +388,10 @@ static void MX_TIM2_Init(void)
     Error_Handler();
   }
   if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
   {
     Error_Handler();
   }
