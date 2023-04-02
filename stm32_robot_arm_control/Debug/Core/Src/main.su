@@ -1,0 +1,8 @@
+../Core/Src/main.c:71:13:moveRobotArmJoint	128	dynamic
+../Core/Src/main.c:133:13:send_echo	16	static
+../Core/Src/main.c:147:5:main	136	static
+../Core/Src/main.c:282:6:SystemClock_Config	88	static
+../Core/Src/main.c:329:13:MX_TIM2_Init	64	static
+../Core/Src/main.c:396:13:MX_UART4_Init	8	static
+../Core/Src/main.c:429:13:MX_GPIO_Init	24	static
+../Core/Src/main.c:451:6:Error_Handler	4	static,ignoring_inline_asm
