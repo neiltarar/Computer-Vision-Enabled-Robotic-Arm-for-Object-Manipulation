@@ -71,31 +71,44 @@ static void MX_TIM2_Init(void);
 static void MX_UART4_Init(void);
 /* USER CODE BEGIN PFP */
 static void moveRobotArmJoint(uint32_t angle[], CCR_Register ccr_register[], int num_joints) {
+	static bool first_run = true; // Add this line to track if it's the first run
     JointMove joint_moves[num_joints];
     bool joints_moving[num_joints];
 
+    if (first_run) { // Add this condition to check if it's the first run
+                uint32_t initialCCR = (uint32_t)((90 / 180.0) * 2000 + 2000);
+                uint32_t initialCCR2 = (uint32_t)((65 / 180.0) * 2000 + 2000);
+                // Set all PWM registers (CCR1 to CCR4) to 90 degrees
+                htim2.Instance->CCR1 = initialCCR;
+                htim2.Instance->CCR2 = initialCCR2;
+                htim2.Instance->CCR3 = initialCCR;
+                htim2.Instance->CCR4 = initialCCR;
+
+                first_run = false;
+            }
     for (int i = 0; i < num_joints; i++) {
         joint_moves[i].ccr_register = ccr_register[i];
         joint_moves[i].targetCCR = (uint32_t)((angle[i] / 180.0) * 2000 + 2000);
         joints_moving[i] = true;
 
-        switch (ccr_register[i]) {
-            case BASE1:
-                joint_moves[i].currentCCR = htim2.Instance->CCR1;
-                break;
-            case ARM2:
-                joint_moves[i].currentCCR = htim2.Instance->CCR2;
-                break;
-            case ARM4:
-                joint_moves[i].currentCCR = htim2.Instance->CCR3;
-                break;
-            case CLAW7:
+		switch (ccr_register[i]) {
+			case BASE1:
+				joint_moves[i].currentCCR = htim2.Instance->CCR1;
+				break;
+			case ARM2:
+				joint_moves[i].currentCCR = htim2.Instance->CCR2;
+				break;
+			case ARM4:
+				joint_moves[i].currentCCR = htim2.Instance->CCR3;
+				break;
+			case CLAW7:
 				joint_moves[i].currentCCR = htim2.Instance->CCR4;
 				break;
-            default:
-                // handle error case
-                return;
-        }
+			default:
+				// handle error case
+				return;
+		}
+
     }
 
     bool all_joints_reached_target = false;
