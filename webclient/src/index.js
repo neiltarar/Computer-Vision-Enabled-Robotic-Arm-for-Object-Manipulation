@@ -5,6 +5,8 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+console.log('Reset values BASE1-90,ARM2-65,ARM3-180,ARM4-90,CLAW7-150');
+
 root.render(
     <ChakraProvider>
         <React.StrictMode>
