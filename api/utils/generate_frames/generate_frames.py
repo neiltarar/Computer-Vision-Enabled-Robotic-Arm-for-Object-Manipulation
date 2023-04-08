@@ -15,7 +15,7 @@ import marshal
 import cv2
 
 
-def generate_frames(lm_threshold):
+def generate_comp_vision_frames(lm_threshold):
     lm_threshold = lm_threshold
     device = check_available_devices()
     pipeline = Pipeline(device)
@@ -89,7 +89,7 @@ def generate_frames(lm_threshold):
                 sleep(0.1)
     except Exception as e:
         print(f"ERROR OCCURRED: \n{e}")
-        generate_frames(lm_threshold)
+        generate_comp_vision_frames(lm_threshold)
 
     device.close()
     cv2.destroyAllWindows()
