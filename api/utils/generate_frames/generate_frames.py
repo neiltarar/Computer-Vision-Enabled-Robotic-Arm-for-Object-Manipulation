@@ -9,6 +9,7 @@ from utils.check_available_devices import check_available_devices
 from utils.gesture_conversion_utils.convert_hand_x_to_robot_yaw import convert_hand_yaw_to_robot_yaw
 from domain.model.pipelines.Pipeline import Pipeline
 from utils.gesture_conversion_utils.convert_hand_y_to_robot_arm2_tilt import convert_hand_y_to_robot_arm2_tilt
+from utils.gesture_conversion_utils.convert_hand_z_to_robot_arm3_tilit import convert_hand_z_to_robot_arm3_angle
 from utils.serial_communication import send_receive_serial_data
 from time import sleep
 import marshal
@@ -63,25 +64,29 @@ def generate_comp_vision_frames(lm_threshold):
                     hand = pipeline.extract_hand_data(palm_det_data, i)
                     if hand.lm_score > lm_threshold:
                         mp.recognize_gesture(hand)
-                        # hand_x, hand_y, hand_z = hand.xyz
                         hand_x, hand_y, hand_z = [coord / 10 for coord in hand.xyz]
                         draw.draw_hand(hand, cvFrame)
+
+                        robot_tilt_arm3 = convert_hand_z_to_robot_arm3_angle(hand_z, sensitivity=0, rounding_multiple=5)
                         robot_yaw = convert_hand_yaw_to_robot_yaw(hand_x, sensitivity=0, rounding_multiple=6)
                         robot_tilt_arm2 = convert_hand_y_to_robot_arm2_tilt(hand_y, sensitivity=0, rounding_multiple=6)
+
                         if hand.gesture == "FIST":
                             robot_claw = 0
                         elif hand.gesture == "FIVE":
                             robot_claw = 150
 
-                        robot_commands.extend([f"BASE1-{robot_yaw}", f"ARM2-{robot_tilt_arm2}",f"CLAW7-{robot_claw}\n"])
+                        robot_commands.extend([f"BASE1-{robot_yaw}",
+                                               f"ARM2-{robot_tilt_arm2}",
+                                               f"ARM3-{robot_tilt_arm3}",
+                                               f"CLAW7-{robot_claw}\n"])
+
                         count += 0.1
                         if count > 3:
                             total_command = ",".join(robot_commands)
                             threading.Thread(target=send_receive_serial_data, args=(total_command,)).start()
                             count = 0
-                        # if count > 1.3:
-                        #     threading.Thread(target=send_receive_serial_data, args=(f"ARM2-{robot_tilt_arm2}",)).start()
-                        #     count = 0
+
                 _, img_encoded = cv2.imencode('.jpg', cvFrame)
                 yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(img_encoded) + b'\r\n')
 

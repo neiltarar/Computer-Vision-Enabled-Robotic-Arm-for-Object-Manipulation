@@ -30,9 +30,9 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-#define RX_BUFFER_SIZE 32
-#define TX_BUFFER_SIZE 32
-#define NUM_JOINTS 4
+#define RX_BUFFER_SIZE 48
+#define TX_BUFFER_SIZE 48
+#define NUM_JOINTS 5
 #define JOINT_NAME_SIZE 5
 /* USER CODE END PTD */
 
@@ -48,13 +48,16 @@
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim3;
+
 UART_HandleTypeDef huart4;
 /* USER CODE BEGIN PV */
 typedef enum {
 	BASE1, // PIN: PA15
 	ARM2,  // PIN: PB3
-	ARM4,   // PIN: PB10
-	CLAW7   // PIN: PB11
+	ARM3,  // PIN: PB4
+	ARM4,  // PIN: PB10
+	CLAW7  // PIN: PB11
 } CCR_Register;
 
 typedef struct {
@@ -69,6 +72,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_UART4_Init(void);
+static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 static void moveRobotArmJoint(uint32_t angle[], CCR_Register ccr_register[], int num_joints) {
 	static bool first_run = true; // Add this line to track if it's the first run
@@ -76,14 +80,16 @@ static void moveRobotArmJoint(uint32_t angle[], CCR_Register ccr_register[], int
     bool joints_moving[num_joints];
 
     if (first_run) { // Add this condition to check if it's the first run
-                uint32_t initialCCR = (uint32_t)((90 / 180.0) * 2000 + 2000);
-                uint32_t initialCCR2 = (uint32_t)((65 / 180.0) * 2000 + 2000);
+                uint32_t generalInitialCCR = (uint32_t)((90 / 180.0) * 2000 + 2000);
+                uint32_t arm2InitialCCR = (uint32_t)((65 / 180.0) * 2000 + 2000);
+                uint32_t arm3InitialCCR = (uint32_t)((180 / 180.0) * 2000 + 2000);
+                uint32_t clawInitialCCR = (uint32_t)((150 / 180.0) * 2000 + 2000);
                 // Set all PWM registers (CCR1 to CCR4) to 90 degrees
-                htim2.Instance->CCR1 = initialCCR;
-                htim2.Instance->CCR2 = initialCCR2;
-                htim2.Instance->CCR3 = initialCCR;
-                htim2.Instance->CCR4 = initialCCR;
-
+                htim2.Instance->CCR1 = generalInitialCCR;
+                htim2.Instance->CCR2 = arm2InitialCCR;
+                htim2.Instance->CCR3 = generalInitialCCR;
+                htim2.Instance->CCR4 = clawInitialCCR;
+                htim3.Instance->CCR1 = arm3InitialCCR;
                 first_run = false;
             }
     for (int i = 0; i < num_joints; i++) {
@@ -97,6 +103,9 @@ static void moveRobotArmJoint(uint32_t angle[], CCR_Register ccr_register[], int
 				break;
 			case ARM2:
 				joint_moves[i].currentCCR = htim2.Instance->CCR2;
+				break;
+			case ARM3:
+				joint_moves[i].currentCCR = htim3.Instance->CCR1;
 				break;
 			case ARM4:
 				joint_moves[i].currentCCR = htim2.Instance->CCR3;
@@ -133,6 +142,9 @@ static void moveRobotArmJoint(uint32_t angle[], CCR_Register ccr_register[], int
                     case ARM2:
                         htim2.Instance->CCR2 = joint_moves[i].currentCCR;
                         break;
+                    case ARM3:
+						htim3.Instance->CCR1 = joint_moves[i].currentCCR;
+						break;
                     case ARM4:
                         htim2.Instance->CCR3 = joint_moves[i].currentCCR;
                         break;
@@ -195,6 +207,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_TIM2_Init();
+  MX_TIM3_Init();
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
     // BASE 1 - PIN: PA15
@@ -205,6 +218,8 @@ int main(void)
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
 	// CLAW 7 - PIN: PB11
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
+	// ARM 3 - PIN: PB4
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -260,6 +275,8 @@ int main(void)
 		        ccr_register = BASE1;
 		    } else if (strcmp(JOINT, "ARM2") == 0) {
 		        ccr_register = ARM2;
+		    } else if (strcmp(JOINT, "ARM3") == 0) {
+		        ccr_register = ARM3;
 		    } else if (strcmp(JOINT, "ARM4") == 0) {
 		        ccr_register = ARM4;
 		    } else if (strcmp(JOINT, "CLAW7") == 0) {
@@ -412,6 +429,65 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 2 */
   HAL_TIM_MspPostInit(&htim2);
+
+}
+
+/**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 41;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 65535;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+  HAL_TIM_MspPostInit(&htim3);
 
 }
 
