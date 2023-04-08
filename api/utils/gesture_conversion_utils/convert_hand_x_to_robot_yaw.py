@@ -1,14 +1,13 @@
 def round_to_nearest_multiple(number, multiple):
     return round(number / multiple) * multiple
 
-
 def convert_hand_yaw_to_robot_yaw(value, sensitivity=0, rounding_multiple=5):
     # Define the input range and output range
-    input_min, input_max = 35, -35
+    input_min, input_max = -35, 35
     output_min, output_max = 0, 180
 
     # Clamp the input value to the input range
-    value = max(min(value, input_min), input_max)
+    value = max(min(value, input_max), input_min)
 
     # Normalize the input value to a 0 to 1 range
     normalized_value = (value - input_min) / (input_max - input_min)
