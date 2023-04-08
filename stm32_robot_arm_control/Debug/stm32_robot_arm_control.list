@@ -29,23 +29,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  12 .ARM.attributes 00000030  00000000  00000000  00020074  2**0
                   CONTENTS, READONLY
- 13 .debug_info   0000e17b  00000000  00000000  000200a4  2**0
+ 13 .debug_info   0000e17c  00000000  00000000  000200a4  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_abbrev 00001dc0  00000000  00000000  0002e21f  2**0
+ 14 .debug_abbrev 00001dc0  00000000  00000000  0002e220  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  15 .debug_aranges 00000ce8  00000000  00000000  0002ffe0  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  16 .debug_ranges 00000c60  00000000  00000000  00030cc8  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_macro  00021beb  00000000  00000000  00031928  2**0
+ 17 .debug_macro  00021c03  00000000  00000000  00031928  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_line   0000e78b  00000000  00000000  00053513  2**0
+ 18 .debug_line   0000e78b  00000000  00000000  0005352b  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_str    000cc797  00000000  00000000  00061c9e  2**0
+ 19 .debug_str    000cc810  00000000  00000000  00061cb6  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .comment      00000050  00000000  00000000  0012e435  2**0
+ 20 .comment      00000050  00000000  00000000  0012e4c6  2**0
                   CONTENTS, READONLY
- 21 .debug_frame  000045a4  00000000  00000000  0012e488  2**2
+ 21 .debug_frame  000045a4  00000000  00000000  0012e518  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -1741,10 +1741,10 @@ int main(void)
  800122e:	f000 faf5 	bl	800181c <MX_GPIO_Init>
   MX_TIM2_Init();
  8001232:	f000 f9bd 	bl	80015b0 <MX_TIM2_Init>
-  MX_TIM3_Init();
- 8001236:	f000 fa51 	bl	80016dc <MX_TIM3_Init>
   MX_UART4_Init();
- 800123a:	f000 fac5 	bl	80017c8 <MX_UART4_Init>
+ 8001236:	f000 fac7 	bl	80017c8 <MX_UART4_Init>
+  MX_TIM3_Init();
+ 800123a:	f000 fa4f 	bl	80016dc <MX_TIM3_Init>
   /* USER CODE BEGIN 2 */
     // BASE 1 - PIN: PA15
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
@@ -2461,9 +2461,9 @@ static void MX_TIM3_Init(void)
  8001718:	4b29      	ldr	r3, [pc, #164]	; (80017c0 <MX_TIM3_Init+0xe4>)
  800171a:	2200      	movs	r2, #0
  800171c:	609a      	str	r2, [r3, #8]
-  htim3.Init.Period = 65535;
+  htim3.Init.Period = 39999;
  800171e:	4b28      	ldr	r3, [pc, #160]	; (80017c0 <MX_TIM3_Init+0xe4>)
- 8001720:	f64f 72ff 	movw	r2, #65535	; 0xffff
+ 8001720:	f649 423f 	movw	r2, #39999	; 0x9c3f
  8001724:	60da      	str	r2, [r3, #12]
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
  8001726:	4b26      	ldr	r3, [pc, #152]	; (80017c0 <MX_TIM3_Init+0xe4>)
@@ -2921,7 +2921,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* htim)
     PA15     ------> TIM2_CH1
     PB3     ------> TIM2_CH2
     */
-    GPIO_InitStruct.Pin = ARM2_TIM2_CH3_Pin|GPIO_PIN_11|ARM3_TIM2_CH2_Pin;
+    GPIO_InitStruct.Pin = ARM4_TIM2_CH3_Pin|CLAW7_TIM2_CH4_Pin|ARM2_TIM2_CH2_Pin;
  80019c6:	f640 4308 	movw	r3, #3080	; 0xc08
  80019ca:	617b      	str	r3, [r7, #20]
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -2988,7 +2988,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* htim)
  8001a2a:	f003 0302 	and.w	r3, r3, #2
  8001a2e:	60bb      	str	r3, [r7, #8]
  8001a30:	68bb      	ldr	r3, [r7, #8]
-    GPIO_InitStruct.Pin = GPIO_PIN_4;
+    GPIO_InitStruct.Pin = ARM3_TIM3_CH1_Pin;
  8001a32:	2310      	movs	r3, #16
  8001a34:	617b      	str	r3, [r7, #20]
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -3003,7 +3003,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* htim)
     GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
  8001a42:	2302      	movs	r3, #2
  8001a44:	627b      	str	r3, [r7, #36]	; 0x24
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    HAL_GPIO_Init(ARM3_TIM3_CH1_GPIO_Port, &GPIO_InitStruct);
  8001a46:	f107 0314 	add.w	r3, r7, #20
  8001a4a:	4619      	mov	r1, r3
  8001a4c:	4804      	ldr	r0, [pc, #16]	; (8001a60 <HAL_TIM_MspPostInit+0xf4>)
