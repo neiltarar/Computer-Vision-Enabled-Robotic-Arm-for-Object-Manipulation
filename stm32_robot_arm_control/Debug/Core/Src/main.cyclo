@@ -1,9 +1,0 @@
-main.c:78:13:moveRobotArmJoint	18
-main.c:167:13:send_echo	1
-main.c:181:5:main	16
-main.c:323:6:SystemClock_Config	3
-main.c:370:13:MX_TIM2_Init	9
-main.c:441:13:MX_TIM3_Init	6
-main.c:500:13:MX_UART4_Init	2
-main.c:533:13:MX_GPIO_Init	1
-main.c:555:6:Error_Handler	1
