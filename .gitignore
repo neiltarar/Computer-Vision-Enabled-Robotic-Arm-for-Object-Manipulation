@@ -105,7 +105,7 @@ venv/
 .project
 .settings/
 .mxproject
-debug/
+Debug/
 
 
 # Vagrant directory
