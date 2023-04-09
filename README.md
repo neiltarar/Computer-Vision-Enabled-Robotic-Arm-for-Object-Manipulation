@@ -3,7 +3,7 @@
 In this end-to-end proof of concept project, I present a gesture-controlled robotic arm that leverages real-time computer vision to interpret x, y, z coordinates. 
 As an integral part of my professional portfolio, this system exemplifies my skills in developing user-friendly applications for advanced computer vision and control tasks.
 
-![Robot arm controlled by hand gestures](readme_assets/gesture_controlled_robot_arm_demo_1.gif)
+![Robot arm controlled by hand gestures](readme_assets/robot_arm_hand_gesture_control_demo.gif)
 
 ## Hardware
 
