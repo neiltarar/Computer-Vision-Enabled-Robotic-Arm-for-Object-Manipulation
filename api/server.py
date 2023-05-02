@@ -29,13 +29,15 @@ def handle_command():
 @app.route('/computer_vision_video_feed')
 def computer_vision_video_feed():
     lm_threshold = 0.2
-    return Response(generate_comp_vision_frames(lm_threshold), mimetype='multipart/x-mixed-replace; boundary=frame')
-
+    response = Response(generate_comp_vision_frames(lm_threshold), mimetype='multipart/x-mixed-replace; boundary=frame')
+    response.headers['Vary'] = 'Cookie'
+    return response
 
 @app.route('/robot_arm_video_feed')
 def robot_arm_video_feed():
-    return Response(generate_webcam_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
+    response = Response(generate_webcam_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    response.headers['Vary'] = 'Cookie'
+    return response
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
